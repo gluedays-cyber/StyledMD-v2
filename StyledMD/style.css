@@ -1,0 +1,689 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('./font-settings.css');
+
+:root {
+    /* 전역 및 레이아웃 색상 */
+    --bg-color: #f8f5ed;
+    --text-color: #242424;
+
+    storing,
+    b,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        color: #000000
+    }
+
+    ;
+    --border-color: #ddd;
+
+    /* 컴포넌트 요소 색상 */
+    --toolbar-bg: #f0f0f0;
+    --editor-bg: #FDFBF7;
+    --editor-text: #000000;
+    --table-border-color: #525252;
+
+    /* AIWriter 전용 테마 변수 */
+    --chat-bg: #f0f0f0;
+    --ai-border: #ccc;
+
+    /* 하이퍼 링크 */
+    a {
+        color: inherit;
+        text-decoration: none;
+        background-image: linear-gradient(0deg, #e0af00 0%,
+                #ffed4a 10%, #ffed4a 90%, #fff9bf 100%);
+        background-repeat: no-repeat;
+        background-size: 100% 25%;
+        background-position: 0 100%;
+        transition: background-size 0.25s ease-in;
+    }
+
+    a:hover {
+        background-size: 100% 100%;
+    }
+
+    /* 코드 블록 통합 고정 색상 */
+    --code-bg : #2f1cc2;
+    --code-border: #2f1cc2;
+    --code-text: #ffffff;
+    --code-border: #2f1cc2;
+    --inline-code-bg: var(--code-bg);
+    --inline-code-text: var(--code-text);
+
+    /* 콜아웃 컴포넌트 색상 */
+    --callout-bg: #f8f9fa;
+    --callout-text: #000000;
+    --callout-border: #495057;
+
+    --callout-tip-title: #006f16;
+    --callout-tip-bg: #c6e1cc;
+    --callout-tip-border: #068920;
+    --callout-warning-title: #940202;
+    --callout-warning-bg: #dcc3bd;
+    --callout-warning-border: #f01c00;
+    --callout-question-title: #820059;
+    --callout-question-bg: #f7d3e6;
+    --callout-question-border: #770182;
+    --callout-important-title: #7e6500;
+    --callout-important-bg: #dcd497;
+    --callout-important-border: #afad00;
+}
+
+/* 선택 영역 강제 반전/하이라이트 스타일 */
+.custom-persistent-selection {
+    background-color: #0070c9 !important; /* 배경색 파란색 강조 */
+    color: #ffffff !important;             /* 텍스트 흰색 반전 */
+}
+
+
+
+/* ==========================================================================
+      전체 스타일 & 상하 레이아웃 분할
+   ========================================================================= */
+body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0;
+    font-family: var(--main-font-family);
+    transition: background-color 0.3s, color 0.3s;
+    background: var(--bg-color);
+    color: var(--text-color);
+}
+
+.main-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    height: calc(100vh - 25px);
+    overflow: hidden;
+}
+
+/* 상부 패널 - StyledMD (에디터 & 프리뷰 병렬 배치) */
+.upper-panel {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* 하부 패널 제거됨 */
+.lower-panel {
+    display: none !important;
+}
+
+.main-container.ai-hidden .upper-panel {
+    border-bottom: none;
+}
+
+/* ==========================================================================
+        툴바, 에디터 및 프리뷰 (상부 패널 전용)
+   ========================================================================== */
+
+   /* 드롭다운 스타일 */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-btn {
+    background-color: transparent;
+    color: #ffffff;
+    padding: 3px 6px;
+    font-size: var(--dropdown-btn-font-size);
+    font-weight: var(--dropdown-btn-font-weight);
+    border: 1px solid rgba(255, 208, 0, 0.3);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
+    outline: none;
+}
+
+.dropdown-btn:hover {
+    background-color: rgba(255, 208, 0, 0.1);
+    border-color: #ffffff;
+}
+
+.dropdown-btn:active {
+    transform: scale(0.97);
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 5px;
+    background-color: #ffffff;
+    min-width: 260px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+    border-radius: 6px;
+    border: 1px solid #dddddd;
+    overflow: hidden;
+    animation: fadeIn 0.15s ease-out;
+}
+
+.dropdown-content a {
+    color: #242424 !important;
+    padding: 10px 16px;
+    text-decoration: none;
+    display: block;
+    font-size: var(--dropdown-content-link-font-size);
+    transition: background-color 0.2s;
+    background-image: none !important;
+    white-space: nowrap;
+}
+
+.dropdown-content a:hover {
+    background-color: rgba(0, 112, 201, 0.1);
+    color: #0070c9 !important;
+}
+
+.dropdown.show .dropdown-content {
+    display: block;
+}
+
+.dropdown-divider {
+    height: 1px;
+    margin: 4px 0;
+    overflow: hidden;
+    background-color: #dddddd;
+    border: none;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.btn-container {
+    display: flex;
+    gap: 6px;
+}
+
+.toolbar {
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+    box-sizing: border-box;
+    background: #373737;
+    border-bottom: 2px solid #000000;
+}
+
+.toolbar-btn {
+    background-image: linear-gradient(#42A1EC, #0d2b43);
+    border: 1px solid #00375f;
+    border-radius: 3px;
+    box-sizing: border-box;
+    color: #FFFFFF;
+    cursor: pointer;
+    direction: ltr;
+    display: block;
+    font-family: var(--main-font-family);
+    font-size: var(--toolbar-btn-font-size);
+    font-weight: var(--toolbar-btn-font-weight);
+    letter-spacing: var(--toolbar-btn-letter-spacing);
+    line-height: var(--toolbar-btn-line-height);
+    min-width: 20px;
+    overflow: visible;
+    padding: 3px 8px;
+    text-align: center;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    white-space: nowrap;
+}
+
+.toolbar-btn:disabled {
+    cursor: default;
+    opacity: .3;
+}
+
+.toolbar-btn:hover {
+    background-image: linear-gradient(#51A9EE, #147BCD);
+    border-color: #1482D0;
+    text-decoration: none;
+}
+
+.toolbar-btn:active {
+    background-image: linear-gradient(#3D94D9, #0067B9);
+    border-color: #006DBC;
+    outline: none;
+}
+
+.toolbar-btn:focus {
+    box-shadow: rgba(131, 192, 253, 0.5) 0 0 0 2px;
+    outline: none;
+}
+
+.file-name {
+    color: #e6e6e6;
+    font-weight: var(--file-name-font-weight);
+    background: transparent;
+    border: none;
+    outline: none;
+    text-align: center;
+    font-size: var(--file-name-font-size);
+    font-family: inherit;
+    width: 200px;
+    padding: 3px 6px;
+    border-radius: 3px;
+    transition: background 0.2s, border 0.2s;
+    cursor: pointer;
+}
+
+.file-name:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.file-name:focus {
+    background: rgba(255, 255, 255, 0.15);
+    cursor: text;
+    border-bottom: 2px solid #13f140;
+}
+
+#editor,
+#preview {
+    flex: 0 0 50%;
+    width: 50%;
+    height: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+    transition: background 0.3s, color 0.3s;
+}
+
+#preview {
+    padding: 20px;
+    overflow-y: auto;
+    font-family: var(--main-font-family);
+    font-size: var(--preview-font-size);
+    line-height: var(--preview-line-height);
+}
+
+#editor {
+    display: block;
+    background: var(--editor-bg);
+    border: none;
+    border-right: 1px solid var(--border-color);
+    padding-right: 50px;
+}
+
+/* ==========================================================================
+        AIWriter 전용 스타일 (하부 패널 전용)
+   ========================================================================== */
+/* AIWriter 하부 패널 레이아웃 스타일 제거됨 */
+
+
+
+/* ==========================================================================
+   MARKDOWN ELEMENTS - SYSTEM & COMPONENTS (마크다운 일반 컴포넌트)
+   ========================================================================== */
+#preview h1, #ai-preview h1 { margin-top: 1.0em; margin-bottom: 0.5em; }
+#preview h2, #ai-preview h2 { margin-top: 0.8em; margin-bottom: 0.5em; }
+#preview h3, #ai-preview h3 { margin-top: 0.6em; margin-bottom: 0.0em; }
+#preview h4, #ai-preview h4 { margin-top: 0.5em; margin-bottom: 0.0em; }
+#preview h5, #ai-preview h5 { margin-top: 0.4em; margin-bottom: 0.0em; }
+#preview h6, #ai-preview h6 { margin-top: 0.4em; margin-bottom: 0.0em; }
+
+table,
+th,
+td,
+#preview table,
+#preview th,
+#preview td,
+#ai-preview table,
+#ai-preview th,
+#ai-preview td {
+    border-collapse: collapse;
+    padding: 8px;
+    transition: border-color 0.3s;
+    border: 1px solid var(--table-border-color);
+}
+
+/* ==========================================================================
+   MARKDOWN ELEMENTS - ALL CODE BLOCKS (코드 관련 스타일 통합 관리)
+   ========================================================================== */
+pre,
+#preview pre,
+#ai-preview pre {
+    tab-size: 4;
+    border-radius: 6px;
+    padding: 16px;
+    overflow-x: auto;
+    transition: background-color 0.3s, border-color 0.3s;
+    background-color: var(--code-bg);
+    border: 1px solid var(--code-border);
+}
+
+pre code,
+#preview pre code,
+#ai-preview pre code {
+    font-family: var(--code-font-family);
+    font-size: var(--code-font-size);
+    transition: color 0.3s;
+    color: var(--code-text);
+    background: none;
+    padding: 0;
+    border: none;
+}
+
+:not(pre)>code,
+#preview :not(pre)>code,
+#ai-preview :not(pre)>code {
+    font-family: var(--code-font-family);
+    font-size: var(--code-font-size);
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+    background-color: var(--inline-code-bg);
+    color: var(--inline-code-text);
+    border: 1px solid var(--inline-code-border);
+}
+
+/* ==========================================================================
+   MARKDOWN - CALLOUT UTILITIES (마크다운 콜아웃 시스템)
+   ========================================================================== */
+.callout {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px 16px;
+    margin: 15px 0;
+    border-radius: 8px;
+    border-left: 6px solid;
+    background-color: var(--callout-bg);
+    color: var(--callout-text);
+    border-left-color: var(--callout-border);
+}
+
+.callout-icon {
+    width: 22px;
+    height: 22px;
+    margin-right: 12px;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.callout-content {
+    flex: 1;
+}
+
+.callout-title {
+    font-weight: var(--callout-title-font-weight);
+    font-size: var(--callout-title-font-size);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.callout-tip {
+    border-left-color: var(--callout-tip-border);
+    background-color: var(--callout-tip-bg);
+}
+
+.callout-tip .callout-title {
+    color: var(--callout-tip-title);
+}
+
+.callout-warning {
+    border-left-color: var(--callout-warning-border);
+    background-color: var(--callout-warning-bg);
+}
+
+.callout-warning .callout-title {
+    color: var(--callout-warning-title);
+}
+
+.callout-question {
+    border-left-color: var(--callout-question-border);
+    background-color: var(--callout-question-bg);
+}
+
+.callout-question .callout-title {
+    color: var(--callout-question-title);
+}
+
+.callout-important {
+    border-left-color: var(--callout-important-border);
+    background-color: var(--callout-important-bg);
+}
+
+.callout-important .callout-title {
+    color: var(--callout-important-title);
+}
+
+/* Monaco Editor 글꼴 및 대체 문자 활성화 */
+.monaco-editor, .monaco-editor .view-line, .monaco-editor .view-lines {
+    font-family: var(--code-font-family) !important;
+}
+
+/* 모달창 스타일 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 200;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0.1);
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease-out;
+}
+
+#api-key-modal {
+    z-index: 300 !important; /* AI 대화 모달보다 항상 위에 노출 */
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    background-color: #ffffff;
+    color: #242424;
+    border-radius: 8px;
+    border: 1px solid #dddddd;
+    width: 320px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    animation: slideUp 0.2s ease-out;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #dddddd;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: var(--modal-header-title-font-size);
+    font-weight: var(--modal-header-title-font-weight);
+    color: #0070c9;
+}
+
+.modal-close {
+    font-size: var(--modal-close-font-size);
+    font-weight: var(--modal-close-font-weight);
+    cursor: pointer;
+    color: #888;
+    transition: color 0.2s;
+}
+
+.modal-close:hover {
+    color: #000000;
+}
+#ai-chat-modal .modal-close:hover {
+    color: #ffffff !important;
+}
+
+.modal-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.input-group label {
+    font-size: var(--input-group-label-font-size);
+    font-weight: var(--input-group-label-font-weight);
+    color: #666;
+}
+
+.input-group input {
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    color: #242424;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: var(--input-group-input-font-size);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.input-group input:focus {
+    border-color: #0070c9;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 16px;
+    background-color: #f5f5f5;
+    border-top: 1px solid #dddddd;
+}
+
+.modal-btn {
+    padding: 6px 12px;
+    font-size: var(--modal-btn-font-size);
+    font-weight: var(--modal-btn-font-weight);
+    border-radius: 4px;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s;
+}
+
+.cancel-btn {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+.cancel-btn:hover {
+    background-color: #d0d0d0;
+}
+
+.confirm-btn {
+    background-color: #0070c9;
+    color: #fff;
+}
+
+.confirm-btn:hover {
+    background-color: #147bcd;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==========================================================================
+   읽기 모드 스타일 (Read Mode Styles)
+   ========================================================================== */
+body.read-mode {
+    width: 100% !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+body.read-mode #editor {
+    display: none !important;
+}
+
+body.read-mode #preview {
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    border: none;
+}
+
+body.read-mode .dropdown {
+    display: none !important;
+}
+
+body.read-mode #new-file-btn,
+body.read-mode #save-btn {
+    display: none !important;
+}
+
+/* 빠른 질문 지시 버튼 스타일 */
+.quick-prompt-btn:hover {
+    background-color: #e2e2e2 !important;
+    border-color: #bbb !important;
+}
+.quick-prompt-btn:active {
+    background-color: #d5d5d5 !important;
+    transform: scale(0.98);
+}
+.quick-prompt-btn[data-prompt="개념확장"]:hover,
+.quick-prompt-btn[data-prompt="개념설명"]:hover {
+    background-color: #333333 !important;
+    opacity: 0.9;
+}
+.quick-prompt-btn[data-prompt="개념확장"]:active,
+.quick-prompt-btn[data-prompt="개념설명"]:active {
+    background-color: #000000 !important;
+    transform: scale(0.98);
+}
+.quick-prompt-btn[data-prompt="뜻"]:hover,
+.quick-prompt-btn[data-prompt="요약"]:hover {
+    background-color: #d2e8c4 !important;
+    border-color: #b8d8a2 !important;
+}
+.quick-prompt-btn[data-prompt="뜻"]:active,
+.quick-prompt-btn[data-prompt="요약"]:active {
+    background-color: #c0dbae !important;
+    transform: scale(0.98);
+}
+.quick-prompt-btn[data-prompt="전개예측"]:hover {
+    background-color: #cda5f3 !important;
+    border-color: #8b4ec5 !important;
+}
+.quick-prompt-btn[data-prompt="전개예측"]:active {
+    background-color: #cb9af3 !important;
+    transform: scale(0.98);
+}

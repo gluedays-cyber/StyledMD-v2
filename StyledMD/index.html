@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>StyledMD Editor</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="/.app/lib/monaco-editor/min/vs/loader.js"></script>
+    <link rel="stylesheet" href="/.app/style.css">
+</head>
+<body class="read-mode">
+    <div class="toolbar">
+        <div class="menu-container">
+            <div class="dropdown">
+                <button class="dropdown-btn" type="button">메뉴 ▾</button>
+                <div class="dropdown-content">
+                    <a href="#" id="menu-back-two-docs">'이전 문서로 되돌아가기' 버튼 추가</a>
+                    <a href="#" id="menu-insert-table">테이블 추가</a>
+                    <hr class="dropdown-divider">
+                    <a href="#" id="menu-insert-tip">Tip 추가</a>
+                    <a href="#" id="menu-insert-warning">Warning 추가</a>
+                    <a href="#" id="menu-insert-question">Question 추가</a>
+                    <a href="#" id="menu-insert-important">Important 추가</a>
+                </div>
+            </div>
+        </div>
+        <input type="text" class="file-name" readonly spellcheck="false" title="클릭하여 파일 이름 수정">
+        <div class="btn-container">
+            <button class="toolbar-btn" type="button" id="new-file-btn">📄 새 파일</button>
+            <button class="toolbar-btn save-btn" type="button" id="save-btn">💾 저장</button>
+            <button class="toolbar-btn file-open-btn" type="button">📂 열기</button>
+            <button class="toolbar-btn read-toggle-btn" type="button">✍️ 편집</button>
+        </div>
+    </div>
+    <div class="main-container">
+        <!-- 윗부분: StyledMD 에디터 및 프리뷰 -->
+        <div class="upper-panel">
+            <div id="editor"></div>
+            <div id="preview"></div>
+        </div>
+    </div>
+
+
+
+    <!-- 새 문서 추가 모달 -->
+    <div id="new-doc-modal" class="modal">
+        <div class="modal-content" style="width: 320px;">
+            <div class="modal-header">
+                <h2>새 문서 추가</h2>
+                <span class="modal-close" id="new-doc-close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label for="new-doc-text">보일 문자 (Link Text)</label>
+                    <input type="text" id="new-doc-text" placeholder="예: 상세 정보 바로가기">
+                </div>
+                <div class="input-group">
+                    <label for="new-doc-filename">파일 이름 (Filename)</label>
+                    <input type="text" id="new-doc-filename" placeholder="예: sub_document">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="modal-btn cancel-btn" id="new-doc-cancel">취소</button>
+                <button type="button" class="modal-btn confirm-btn" id="new-doc-confirm">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 테이블 만들기 모달 -->
+    <div id="table-modal" class="modal">
+        <div class="modal-content" style="width: 320px;">
+            <div class="modal-header">
+                <h2>테이블 만들기</h2>
+                <span class="modal-close" id="table-modal-close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label for="table-rows">행 갯수 (Rows)</label>
+                    <input type="number" id="table-rows" min="1" max="100" value="3">
+                </div>
+                <div class="input-group">
+                    <label for="table-cols">열 갯수 (Cols)</label>
+                    <input type="number" id="table-cols" min="1" max="100" value="3">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="modal-btn cancel-btn" id="table-modal-cancel">취소</button>
+                <button type="button" class="modal-btn confirm-btn" id="table-modal-confirm">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- API 키 설정 모달 -->
+    <div id="api-key-modal" class="modal">
+        <div class="modal-content" style="width: 480px; max-height: 85vh; display: flex; flex-direction: column;">
+            <div class="modal-header">
+                <h2>Model 관리</h2>
+                <span class="modal-close" id="api-key-close">&times;</span>
+            </div>
+            <div class="modal-body" style="overflow-y: auto; flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 16px;">
+                <!-- Google API Section -->
+                <div style="border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; background: #fafafa;">
+                    <h3 style="margin: 0 0 8px 0; font-size: 13px; color: #0070c9;">Google API</h3>
+                    <div class="input-group" style="margin-bottom: 8px;">
+                        <label for="google-api-key" style="font-size: 11px;">Gemini API Key</label>
+                        <input type="password" id="google-api-key" placeholder="API 키 입력" style="width: 100%; box-sizing: border-box;">
+                    </div>
+                    <div class="input-group" style="flex-direction: row; gap: 8px; margin-bottom: 8px;">
+                        <div style="flex: 1;">
+                            <label for="google-model1-name" style="font-size: 10px;">모델 1 이름</label>
+                            <input type="text" id="google-model1-name" placeholder="예: gemini-2.5-flash-lite" style="width: 100%; box-sizing: border-box; font-size: 12px; padding: 6px;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="google-model1-alias" style="font-size: 10px;">모델 1 별명</label>
+                            <input type="text" id="google-model1-alias" placeholder="예: 빠른응답" style="width: 100%; box-sizing: border-box; font-size: 12px; padding: 6px;">
+                        </div>
+                    </div>
+                    <div class="input-group" style="flex-direction: row; gap: 8px;">
+                        <div style="flex: 1;">
+                            <label for="google-model2-name" style="font-size: 10px;">모델 2 이름</label>
+                            <input type="text" id="google-model2-name" placeholder="예: gemini-2.5-flash" style="width: 100%; box-sizing: border-box; font-size: 12px; padding: 6px;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="google-model2-alias" style="font-size: 10px;">모델 2 별명</label>
+                            <input type="text" id="google-model2-alias" placeholder="예: 심층추론" style="width: 100%; box-sizing: border-box; font-size: 12px; padding: 6px;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Groq API Section -->
+                <div style="border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; background: #fafafa;">
+                    <h3 style="margin: 0 0 8px 0; font-size: 13px; color: #0070c9;">Groq API</h3>
+                    <div class="input-group" style="margin-bottom: 8px;">
+                        <label for="groq-api-key" style="font-size: 11px;">Groq API Key</label>
+                        <input type="password" id="groq-api-key" placeholder="API 키 입력" style="width: 100%; box-sizing: border-box;">
+                    </div>
+                    <div class="input-group" style="flex-direction: row; gap: 8px; margin-bottom: 8px;">
+                        <div style="flex: 1;">
+                            <label for="groq-model1-name" style="font-size: 10px;">모델 1 이름</label>
+                            <input type="text" id="groq-model1-name" placeholder="예: llama3-8b-8192" style="width: 100%; box-sizing: border-box; font-size: 12px; padding: 6px;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="groq-model1-alias" style="font-size: 10px;">모델 1 별명</label>
+                            <input type="text" id="groq-model1-alias" placeholder="예: Llama3 8B" style="width: 100%; box-sizing: border-box; font-size: 12px; padding: 6px;">
+                        </div>
+                    </div>
+                    <div class="input-group" style="flex-direction: row; gap: 8px;">
+                        <div style="flex: 1;">
+                            <label for="groq-model2-name" style="font-size: 10px;">모델 2 이름</label>
+                            <input type="text" id="groq-model2-name" placeholder="예: llama3-70b-8192" style="width: 100%; box-sizing: border-box; font-size: 12px; padding: 6px;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="groq-model2-alias" style="font-size: 10px;">모델 2 별명</label>
+                            <input type="text" id="groq-model2-alias" placeholder="예: Llama3 70B" style="width: 100%; box-sizing: border-box; font-size: 12px; padding: 6px;">
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="modal-btn cancel-btn" id="api-key-cancel">취소</button>
+                <button type="button" class="modal-btn confirm-btn" id="api-key-confirm">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI 통합 대화 모달 추가 -->
+    <div id="ai-chat-modal" class="modal">
+        <div class="modal-content" style="width: 550px; max-height: 90vh; display: flex; flex-direction: column;">
+            <div class="modal-header" style="background-color: #2d3748; padding: 6px 12px; border-bottom: 1px solid #1a202c;">
+                <h4 id="ai-chat-title" style="margin: 0; font-size: 13px; font-weight: 500; color: #ffffff; letter-spacing: -0.01em;">AI와의 대화</h4>
+                <span class="modal-close" id="ai-chat-close" style="color: #a0aec0; font-size: 16px; line-height: 1;">&times;</span>
+            </div>
+            <div class="modal-body" style="overflow-y: auto; flex: 1; padding: 16px 16px 8px 16px; display: flex; flex-direction: column; gap: 12px;">
+                <div class="input-group">
+                    <textarea id="ai-selected-text-caption" readonly style="width: 100%; height: 120px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 4px; padding: 8px; resize: none; font-family: inherit; font-size: 13px; background-color: #f5f5f5; outline: none;"></textarea>
+                </div>
+                <div class="input-group" style="flex: 1; display: flex; flex-direction: column;">
+                    <textarea id="ai-chat-history" spellcheck="false" style="flex: 1; min-height: 200px; max-height: 350px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; background: #ffffff; font-size: 14px; line-height: 1.6; resize: vertical; font-family: inherit; outline: none;"></textarea>
+                </div>
+                <div class="input-group">
+                    <div class="quick-prompt-buttons" style="display: flex; gap: 2px; margin-top: 2px; flex-wrap: wrap;">
+                         <button type="button" class="quick-prompt-btn" data-prompt="뜻" style="flex: 1; min-width: 60px; padding: 2px; font-size: 12px; font-weight: bold; border: 1px solid #c8e0b8; border-radius: 4px; background: #e2f0d9; cursor: pointer; transition: background 0.2s;">뜻</button>
+                         <button type="button" class="quick-prompt-btn" data-prompt="요약" style="flex: 1; min-width: 60px; padding: 2px; font-size: 12px; font-weight: bold; border: 1px solid #c8e0b8; border-radius: 4px; background: #e2f0d9; cursor: pointer; transition: background 0.2s;">요약</button>
+                         <button type="button" class="quick-prompt-btn" data-prompt="영어로" style="flex: 1; min-width: 60px; padding: 2px; font-size: 12px; font-weight: bold; border: 1px solid var(--border-color); border-radius: 4px; background: #f5f5f5; cursor: pointer; transition: background 0.2s;">영어로</button>
+                         <button type="button" class="quick-prompt-btn" data-prompt="한글로" style="flex: 1; min-width: 60px; padding: 2px; font-size: 12px; font-weight: bold; border: 1px solid var(--border-color); border-radius: 4px; background: #f5f5f5; cursor: pointer; transition: background 0.2s;">한글로</button>
+                         <button type="button" class="quick-prompt-btn" data-prompt="개념확장" style="flex: 1; min-width: 60px; padding: 2px; font-size: 12px; font-weight: bold; border: 1px solid #111; border-radius: 4px; background: #1a1a1a; color: #ffffff; cursor: pointer; transition: background 0.2s, opacity 0.2s;">개념확장</button>
+                         <button type="button" class="quick-prompt-btn" data-prompt="개념설명" style="flex: 1; min-width: 60px; padding: 2px; font-size: 12px; font-weight: bold; border: 1px solid #111; border-radius: 4px; background: #1a1a1a; color: #ffffff; cursor: pointer; transition: background 0.2s, opacity 0.2s;">개념설명</button>
+                         <button type="button" class="quick-prompt-btn" data-prompt="전개예측" style="flex: 1; min-width: 60px; padding: 2px; font-size: 12px; font-weight: bold; border: 1px solid #d3bee8; border-radius: 4px; background: #e8dcf0; cursor: pointer; transition: background 0.2s;">전개예측</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <textarea id="ai-prompt-input" placeholder="지시사항을 입력하고 Enter를 누르십시오 (Shift+Enter로 줄바꿈)" style="width: 100%; height: 70px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 4px; padding: 8px; font-family: inherit; font-size: 13px; outline: none; resize: none;"></textarea>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <select id="ai-modelSelect" style="padding: 6px; border-radius: 4px; background: #fff; border: 1px solid var(--border-color); outline: none; font-size: 12px; font-weight: bold; cursor: pointer;">
+                            <option value="gemini-2.5-flash-lite">⚡ 빠른응답 (Gemini Flash-Lite)</option>
+                            <option value="gemini-2.5-flash">🧠 심층추론 (Gemini Flash)</option>
+                        </select>
+                        <button type="button" id="api-key-setup-btn" style="padding: 6px 10px; font-size: 12px; cursor: pointer; background: #fff; border: 1px solid var(--border-color); border-radius: 4px; font-weight: bold;">⚙️ Model관리</button>
+                    </div>
+                    <div style="display: flex; gap: 6px;">
+                        <button type="button" class="modal-btn confirm-btn" id="ai-chat-insert" style="font-size: 12px; padding: 6px 10px;">📤 본문에 삽입</button>
+                        <button type="button" class="modal-btn cancel-btn" id="ai-chat-clear" style="font-size: 12px; padding: 6px 10px;">🧹 비우기</button>
+                    </div>
+                </div>
+            </div>
+            <div id="ai-chat-model-info" style="padding: 0 16px 4px 16px; font-size: 11px; color: #888; text-align: right; background-color: #ffffff;"></div>
+        </div>
+    </div>
+
+    <script src="/.app/script.js"></script>
+</body>
+</html>
